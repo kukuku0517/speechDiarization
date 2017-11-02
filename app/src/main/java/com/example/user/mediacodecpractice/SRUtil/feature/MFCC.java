@@ -31,7 +31,7 @@ public class MFCC {
 
     public double[] doMFCC(float[] framedSignal) {
         // Magnitude Spectrum
-        framedSignal = preEmphasis(framedSignal);
+//        framedSignal = preEmphasis(framedSignal);
         bin = magnitudeSpectrum(framedSignal);
 //        LogUtil.logPy(bin,"python");
         /*

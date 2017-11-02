@@ -18,7 +18,7 @@ import java.util.List;
 public class MFCCFeatureMain {
 
     //	private static FormatControlConf fc = new FormatControlConf();
-    private static final int SAMPLING_RATE = 1024; // (int) fc.getRate();
+    private static final int SAMPLING_RATE = 44100; // (int) fc.getRate();
     // int samplePerFrame = 256; // 16ms for 8 khz
     private static final int SAMPLE_PER_FRAME = 1024; // 512,23.22ms
     private static final int FEATURE_DIMENSION = 39;
