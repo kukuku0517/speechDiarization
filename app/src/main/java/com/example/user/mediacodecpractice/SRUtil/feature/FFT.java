@@ -1,120 +1,122 @@
 package com.example.user.mediacodecpractice.SRUtil.feature;
 
-import android.util.Log;
-
 /**
- * last updated on June 15, 2002<br>
- * <b>description:</b> FFT class for real signals. Upon entry, N contains the
- * numbers of points in the DFT, real[] and imaginary[] contain the real and
- * imaginary parts of the input. Upon return, real[] and imaginary[] contain the
- * DFT output. All signals run from 0 to N - 1<br>
- * <b>input:</b> speech signal<br>
- * <b>output:</b> real and imaginary part of DFT output
- *
- * @author Danny Su
+ * Created by USER on 2017-11-02.
  */
+
 public class FFT {
+    int nfft, m;
 
-	/**
-	 * number of points
-	 */
-	protected int numPoints;
+    // Lookup tables.  Only need to recompute when size of FFTdeprecated changes.
+    double[] cos;
+    double[] sin;
 
-	/**
-	 * real part
-	 */
-	public float real[];
+    public FFT(int nfft) {
+        this.nfft = nfft;
+        this.m = (int) (Math.log(nfft) / Math.log(2));
 
-	/**
-	 * imaginary part
-	 */
-	public float imag[];
+        // Make sure nfft is a power of 2
+        if (nfft != (1 << m)) {
+            throw new RuntimeException("FFTdeprecated length must be power of 2");
+        }
 
-	/**
-	 * performs Fast Fourier Transformation<br>
-	 *
-	 * @param signal
-	 */
-	public void computeFFT(float signal[]) {
+        // precompute tables
+        cos = new double[nfft / 2];
+        sin = new double[nfft / 2];
 
-		numPoints = signal.length;
-		// initialize real & imag array
-		real = new float[numPoints];
-		imag = new float[numPoints];
-		// move the N point signal into the real part of the complex DFT's time
-		// domain
-		real = signal;
-		// set all of the samples in the imaginary part to zero
-		for (int i = 0; i < imag.length; i++) {
-			imag[i] = 0;
-		}
-		// perform FFT using the real & imag array
-		FFTRun();
-	}
+        for (int i = 0; i < nfft / 2; i++) {
+            cos[i] = Math.cos(-2 * Math.PI * i / nfft);
+            sin[i] = Math.sin(-2 * Math.PI * i / nfft);
+        }
+    }
 
-	/**
-	 * performs Fast Fourier Transformation<br>
-	 */
-	private void FFTRun() {
-		if (numPoints == 1) {
-			return;
-		}
-		final double pi = Math.PI;
-		final int numStages = (int) (Math.log(numPoints) / Math.log(2));
-		int halfNumPoints = numPoints >> 1;
-		int j = halfNumPoints;
-		// FFT time domain decomposition carried out by "bit reversal sorting"
-		// algorithm
-		int k = 0;
-		for (int i = 1; i < numPoints - 2; i++) {
-			if (i < j) {
-				// swap
-				float tempReal = real[j];
-				float tempImag = imag[j];
-				real[j] = real[i];
-				imag[j] = imag[i];
-				real[i] = tempReal;
-				imag[i] = tempImag;
-			}
-			k = halfNumPoints;
-			while (k <= j) {
-				j -= k;
-				k >>= 1;
-			}
-			j += k;
-		}
 
-		// loop for each stage
-		for (int stage = 1; stage <= numStages; stage++) {
-			int LE = 1;
-			for (int i = 0; i < stage; i++) {
-				LE <<= 1;
-			}
-			int LE2 = LE >> 1;
-			double UR = 1;
-			double UI = 0;
-			// calculate sine & cosine values
-			double SR = Math.cos(pi / LE2);
-			double SI = -Math.sin(pi / LE2);
-			// loop for each sub DFT
-			for (int subDFT = 1; subDFT <= LE2; subDFT++) {
-				// loop for each butterfly
-				for (int butterfly = subDFT - 1; butterfly <= numPoints - 1; butterfly += LE) {
-					int ip = butterfly + LE2;
-					// butterfly calculation
-					float tempReal = (float) (real[ip] * UR - imag[ip] * UI);
-					float tempImag = (float) (real[ip] * UI + imag[ip] * UR);
-					real[ip] = real[butterfly] - tempReal;
-					imag[ip] = imag[butterfly] - tempImag;
-					real[butterfly] += tempReal;
-					imag[butterfly] += tempImag;
-				}
+    /***************************************************************
+     * fft.c
+     * Douglas L. Jones
+     * University of Illinois at Urbana-Champaign
+     * January 19, 1992
+     * http://cnx.rice.edu/content/m12016/latest/
+     *
+     *   fft: in-place radix-2 DIT DFT of a complex input
+     *
+     *   input:
+     * nfft: length of FFTdeprecated: must be a power of two
+     * m: nfft = 2**m
+     *   input/output
+     * x: double array of length nfft with real part of data
+     * y: double array of length nfft with imag part of data
+     *
+     *   Permission to copy and use this program is granted
+     *   as long as this header is included.
+     ****************************************************************/
+    public double[] re;
+    public double[] im;
 
-				double tempUR = UR;
-				UR = tempUR * SR - UI * SI;
-				UI = tempUR * SI + UI * SR;
-			}
-		}
-	}
+    public void fft(float signal[]) {
+
+        int numPoints = signal.length;
+        // initialize real & imag array
+        re = new double[numPoints];
+        im = new double[numPoints];
+        // move the N point signal into the real part of the complex DFT's time
+        // domain
+        for (int i = 0; i < numPoints; i++) {
+            re[i] = signal[i];
+        }
+        // set all of the samples in the imaginary part to zero
+        for (int i = 0; i < numPoints; i++) {
+            im[i] = 0;
+        }
+
+        int i, j, k, n1, n2, a;
+        double c, s, t1, t2;
+
+        // Bit-reverse
+        j = 0;
+        n2 = nfft / 2;
+        for (i = 1; i < nfft - 1; i++) {
+            n1 = n2;
+            while (j >= n1) {
+                j = j - n1;
+                n1 = n1 / 2;
+            }
+            j = j + n1;
+
+            if (i < j) {
+                t1 = re[i];
+                re[i] = re[j];
+                re[j] = t1;
+                t1 = im[i];
+                im[i] = im[j];
+                im[j] = t1;
+            }
+        }
+
+        // FFTdeprecated
+        n1 = 0;
+        n2 = 1;
+
+        for (i = 0; i < m; i++) {
+            n1 = n2;
+            n2 = n2 + n2;
+            a = 0;
+
+            for (j = 0; j < n1; j++) {
+                c = cos[a];
+                s = sin[a];
+                a += 1 << (m - i - 1);
+
+                for (k = j; k < nfft; k = k + n2) {
+                    t1 = c * re[k + n1] - s * im[k + n1];
+                    t2 = s * re[k + n1] + c * im[k + n1];
+                    re[k + n1] = re[k] - t1;
+                    im[k + n1] = im[k] - t2;
+                    re[k] = re[k] + t1;
+                    im[k] = im[k] + t2;
+                }
+            }
+        }
+    }
 
 }

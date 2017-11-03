@@ -19,8 +19,6 @@ public class EndPointDetection {
 		this.originalSignal = originalSignal;
 		this.samplingRate = samplingRate;
 		samplePerFrame = this.samplingRate / 1000;
-//		samplePerFrame = 44100 / 1000;
-
 		firstSamples = samplePerFrame * 200;// according to formula
 		firstSamples = originalSignal.length>firstSamples?firstSamples:originalSignal.length;
 	}

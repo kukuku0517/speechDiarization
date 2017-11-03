@@ -156,9 +156,10 @@ public class PlayerActivity extends Activity implements OnAudioStreamInterface, 
         mAudioPlayer.setOnAudioStreamInterface(this);
 
 
-        mAudioPlayer.setUrlString(getFilename("희진정환1"));
+//        mAudioPlayer.setUrlString(getFilename("정환희진2"));
+//        mAudioPlayer.setUrlString(getFilename("희진정환1"));
 
-//        mAudioPlayer.setUrlString(getFilename("태원정환"));
+        mAudioPlayer.setUrlString(getFilename("정환태규"));
         try
         {
             mAudioPlayer.play();

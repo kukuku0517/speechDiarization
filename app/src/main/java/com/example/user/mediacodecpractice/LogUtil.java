@@ -13,7 +13,7 @@ import java.io.OutputStreamWriter;
  */
 
 public class LogUtil {
-    public static int count=0;
+    public static int count = 0;
 
     public static void log(float[] array, String msg) {
         StringBuffer buffer = new StringBuffer();
@@ -68,7 +68,7 @@ public class LogUtil {
         File file = new File(filepath, "Music");
 
 
-        file = new File(file.getAbsolutePath(), filename + count++ +".txt");
+        file = new File(file.getAbsolutePath(), filename + count++ + ".txt");
 
 
         // Save your stream, don't forget to flush() it before closing it.
@@ -78,15 +78,15 @@ public class LogUtil {
             FileOutputStream fOut = new FileOutputStream(file);
             OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
             myOutWriter.append("[");
-            int count=0;
+            int count = 0;
             for (float aa : a) {
-                if(count==0){
+                if (count == 0) {
 
                     myOutWriter.append(String.valueOf(aa));
                     count++;
-                }else{
+                } else {
 
-                    myOutWriter.append(","+aa);
+                    myOutWriter.append("," + aa);
                 }
             }
             myOutWriter.append("]");
@@ -98,6 +98,31 @@ public class LogUtil {
             Log.e("Exception", "File write failed: " + e.toString());
         }
     }
+
+    public static void maxInArray(float[] a, String log) {
+        float max = Float.MIN_VALUE;
+        float min = Float.MAX_VALUE;
+
+
+        for (float aa : a) {
+            if (aa > max) max = aa;
+            if (aa < min) min = aa;
+        }
+        Log.d("maxmin", log + ":" + max + "/" + min);
+    }
+
+    public static void maxInArray(double[] a, String log) {
+        double max = Double.MIN_VALUE;
+        double min = Double.MAX_VALUE;
+
+
+        for (double aa : a) {
+            if (aa > max) max = aa;
+            if (aa < min) min = aa;
+        }
+        Log.d("maxmin", log + ":" + max + "/" + min);
+    }
+
 
     public static void writeToFile(double[] a, String filename) {
         // Get the directory for the user's public pictures directory.
@@ -105,26 +130,79 @@ public class LogUtil {
         File file = new File(filepath, "Music");
 
 
-        file = new File(file.getAbsolutePath(), filename + count++ +".txt");
+        file = new File(file.getAbsolutePath(), filename + count++ + ".txt");
 
 
         // Save your stream, don't forget to flush() it before closing it.
+        if (count <20) {
+            try {
+                file.createNewFile();
+                FileOutputStream fOut = new FileOutputStream(file);
+                OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+                myOutWriter.append("java+=[");
+                int count = 0;
+                for (double aa : a) {
+                    if (count == 0) {
+                        myOutWriter.append(String.valueOf(aa));
+                        count++;
+                    } else {
+                        myOutWriter.append("," + aa);
+                    }
+                }
+                myOutWriter.append("]");
+                myOutWriter.close();
 
+                fOut.flush();
+                fOut.close();
+            } catch (IOException e) {
+                Log.e("Exception", "File write failed: " + e.toString());
+            }
+        }
+
+    }
+
+    public static void writeToFileAsWhole(double[][] a, String filename) {
+        // Get the directory for the user's public pictures directory.
+        String filepath = Environment.getExternalStorageDirectory().getPath();
+        File file = new File(filepath, "Music");
+
+
+        file = new File(file.getAbsolutePath(), filename + count++ + ".txt");
+
+
+        // Save your stream, don't forget to flush() it before closing it.
         try {
             file.createNewFile();
             FileOutputStream fOut = new FileOutputStream(file);
             OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
-            myOutWriter.append("[");
+            myOutWriter.append("java=[");
+//                int count = 0;
+//                for (double aa : a) {
+//                    if (count == 0) {
+//                        myOutWriter.append(String.valueOf(aa));
+//                        count++;
+//                    } else {
+//                        myOutWriter.append("," + aa);
+//                    }
+//                }
             int count=0;
-            for (double aa : a) {
+            for (double[] dd : a) {
                 if(count==0){
-
-                    myOutWriter.append(String.valueOf(aa));
+                    myOutWriter.append("[");
                     count++;
                 }else{
-
-                    myOutWriter.append(","+aa);
+                    myOutWriter.append(",[");
                 }
+                int count2=0;
+                for (double d : dd) {
+                    if(count2==0){
+                        myOutWriter.append(String.valueOf(d));
+                        count2++;
+                    }else{
+                        myOutWriter.append(","+d);
+                    }
+                }
+                myOutWriter.append("]");
             }
             myOutWriter.append("]");
             myOutWriter.close();
@@ -135,5 +213,6 @@ public class LogUtil {
             Log.e("Exception", "File write failed: " + e.toString());
         }
     }
+
 
 }

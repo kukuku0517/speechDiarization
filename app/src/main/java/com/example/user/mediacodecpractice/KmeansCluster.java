@@ -531,8 +531,8 @@ public class KmeansCluster {
 
             StringBuffer buffer = new StringBuffer();
             for(int a[]:clusterIndex2){
-                for(int b:a){
-                    buffer.append("\t"+String.valueOf(b));
+                for(int i=0;i<a.length;i+=1){
+                    buffer.append("\t"+String.valueOf(a[i]));
                 }
             }
             Log.d("asdfasdf",buffer.toString());

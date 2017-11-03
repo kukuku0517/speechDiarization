@@ -7,7 +7,6 @@ package com.example.user.mediacodecpractice.SRUtil.feature;
  *
  */
 public class DCT {
-
 	/**
 	 * number of mfcc coeffs
 	 */
@@ -18,8 +17,7 @@ public class DCT {
 	int M;
 
 	/**
-	 * @param len
-	 *            length of array, i.e., number of features
+	 *
 	 * @param M
 	 *            numbe of Mel Filters
 	 * @return

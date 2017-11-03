@@ -1,103 +1,70 @@
 package com.example.user.mediacodecpractice.SRUtil.feature;
 
-import android.util.Log;
-
-import com.example.user.mediacodecpractice.LogUtil;
-
 public class MFCC {
-
-    private int numMelFilters = 30;// how much
+    //    private int numMelFilters = 30;// how much
+    private int numMelFilters = 26;// how much
     private int numCepstra;// number of mfcc coeffs
     private double preEmphasisAlpha = 0.95;
-    private double lowerFilterFreq = 80.00;// FmelLow
+    //    private double lowerFilterFreq = 80.00;// FmelLow
+    private double lowerFilterFreq = 0.00;// FmelLow
     private double samplingRate;
     private double upperFilterFreq;
     private double bin[];
     private int samplePerFrame;
+    private DCT dct;
+    private FFT fft;
 
-    FFT fft;
-    DCT dct;
+    private double magSpectrum[];
 
     public MFCC(int samplePerFrame, int samplingRate, int numCepstra) {
         this.samplePerFrame = samplePerFrame;
         this.samplingRate = samplingRate;
         this.numCepstra = numCepstra;
-        upperFilterFreq = samplingRate / 2.0;
-        fft = new FFT();
-
-
-        dct = new DCT(this.numCepstra, numMelFilters);
+        this.upperFilterFreq = samplingRate / 2.0;
+        this.dct = new DCT(this.numCepstra, numMelFilters);
     }
 
     public double[] doMFCC(float[] framedSignal) {
-        // Magnitude Spectrum
-//        framedSignal = preEmphasis(framedSignal);
         bin = magnitudeSpectrum(framedSignal);
-//        LogUtil.logPy(bin,"python");
-        /*
-		 * cbin=frequencies of the channels in terms of FFT bin indices (cbin[i]
-		 * for the i -th channel)
-		 */
+        double energy = 0;
+        for (double d : bin) {
+            energy += d;
+        }
+        if (energy == 0) {
+            energy = 0.00000000000001f;
+        }
 
-        // prepare filter for for melFilter
-        int cbin[] = fftBinIndices();// same for all
-        // process Mel Filterbank
+        int cbin[] = fftBinIndices();
         double fbank[] = melFilter(bin, cbin);
-        // magnitudeSpectrum and bin filter indices
+        for (int i = 0; i < fbank.length; i++) {
+            if (fbank[i] == 0) {
+                fbank[i] = 0.00000000000001;
+            }
+        }
 
-        // System.out.println("after mel filter");
-        // ArrayWriter.printDoubleArrayToConole(fbank);
-
-        // Non-linear transformation
         double f[] = nonLinearTransformation(fbank);
-        // System.out.println("after N L T");
-        // ArrayWriter.printDoubleArrayToConole(f);
 
-        // Cepstral coefficients, by DCT
         double cepc[] = dct.performDCT(f);
-        // System.out.println("after DCT");
-        // ArrayWriter.printDoubleArrayToConole(cepc);
-//        LogUtil.logPy(cepc, "cepc");
+
+        for (int i = 0; i < cepc.length; i++) {
+            double lift = 1 + (22 / 2) * Math.sin(Math.PI * i / 22);
+            cepc[i] = cepc[i] * lift;
+        }
+        cepc[0] = Math.log(energy);
+
         return cepc;
     }
 
-   FFT2 fft2;
     private double[] magnitudeSpectrum(float frame[]) {
-        double magSpectrum[] = new double[frame.length];
-        // calculate FFT for current frame
-
-//        LogUtil.log(frame, "before fft");
-        fft.computeFFT(frame);
-//        fft2 = new FFT2(1024);
-//        fft2.fft(frame);
-        // System.err.println("FFT SUCCEED");
-        // calculate magnitude spectrum
-        for (int k = 0; k < frame.length; k++) {
-            magSpectrum[k] = Math.sqrt(fft.real[k] * fft.real[k] + fft.imag[k] * fft.imag[k]);
+        magSpectrum = new double[1024 / 2 + 1];
+        fft = new FFT(1024);
+        fft.fft(frame);
+        for (int k = 0; k < 1024 / 2 + 1; k++) {
+            magSpectrum[k] = (fft.re[k] * fft.re[k] + fft.im[k] * fft.im[k]) / (1024);
         }
-//        for (int k = 0; k < frame.length; k++) {
-//            magSpectrum[k] = Math.sqrt(fft2.re[k] * fft2.re[k] + fft2.im[k] * fft2.im[k]);
-//        }
-      LogUtil.writeToFile(magSpectrum, "mag");
-
         return magSpectrum;
     }
 
-    /**
-     * emphasize high freq signal
-     *
-     * @param inputSignal
-     * @return
-     */
-    private float[] preEmphasis(float inputSignal[]) {
-        // System.err.println(" inside pre Emphasis");
-        float outputSignal[] = new float[inputSignal.length];
-        // apply pre-emphasis to each sample
-        for (int n = 1; n < inputSignal.length; n++) {
-            outputSignal[n] = (float) (inputSignal[n] - preEmphasisAlpha * inputSignal[n - 1]);
-        }
-        return outputSignal;
-    }
 
     private int[] fftBinIndices() {
         int cbin[] = new int[numMelFilters + 2];
@@ -122,12 +89,10 @@ public class MFCC {
         for (int k = 1; k <= numMelFilters; k++) {
             double num1 = 0.0, num2 = 0.0;
             for (int i = cbin[k - 1]; i <= cbin[k]; i++) {
-                // System.out.println("Inside filter loop");
                 num1 += ((i - cbin[k - 1] + 1) / (cbin[k] - cbin[k - 1] + 1)) * bin[i];
             }
 
             for (int i = cbin[k] + 1; i <= cbin[k + 1]; i++) {
-                // System.out.println("Inside filter loop 222222");
                 num2 += (1 - ((i - cbin[k]) / (cbin[k + 1] - cbin[k] + 1))) * bin[i];
             }
 
@@ -154,7 +119,7 @@ public class MFCC {
             f[i] = Math.log(fbank[i]);
             // check if ln() returns a value less than the floor
             if (f[i] < FLOOR) {
-                f[i] = FLOOR;
+//                f[i] = FLOOR;
             }
         }
         return f;

@@ -2,6 +2,7 @@ package com.example.user.mediacodecpractice.SRUtil;
 
 import android.util.Log;
 
+import com.example.user.mediacodecpractice.LogUtil;
 import com.example.user.mediacodecpractice.SRUtil.feature.Delta;
 import com.example.user.mediacodecpractice.SRUtil.feature.Energy;
 import com.example.user.mediacodecpractice.SRUtil.feature.FeatureVector;
@@ -23,7 +24,7 @@ public class FeatureExtract {
 	/**
 	 * how many mfcc coefficients per frame
 	 */
-	private int numCepstra = 12;
+	private int numCepstra = 13;
 
 	private double[][] featureVector;
 	private double[][] mfccFeature;
@@ -60,54 +61,13 @@ public class FeatureExtract {
 		deltaEnergy = new double[noOfFrames];
 		deltaDeltaEnergy = new double[noOfFrames];
 //		featureVector = new double[noOfFrames][3 * numCepstra + 3];
-		featureVector = new double[noOfFrames][numCepstra +1];
+		featureVector = new double[noOfFrames][numCepstra];
 
 		delta = new Delta();
 	}
 
 	public FeatureVector getFeatureVector() {
 		return fv;
-	}
-
-	/**
-	 * generates feature vector by combining mfcc, and its delta and delta
-	 * deltas also contains energy and its deltas
-	 */
-	public void makeMfccFeatureVector() {
-		calculateMFCC();
-		doCepstralMeanNormalization();
-		// delta
-		delta.setRegressionWindow(2);// 2 for delta
-		deltaMfcc = delta.performDelta2D(mfccFeature);
-		// delta delta
-		delta.setRegressionWindow(1);// 1 for delta delta
-		deltaDeltaMfcc = delta.performDelta2D(deltaMfcc);
-		// energy
-		energyVal = en.calcEnergy(framedSignal);
-
-		delta.setRegressionWindow(1);
-		// energy delta
-		deltaEnergy = delta.performDelta1D(energyVal);
-		delta.setRegressionWindow(1);
-		// energy delta delta
-		deltaDeltaEnergy = delta.performDelta1D(deltaEnergy);
-		for (int i = 0; i < framedSignal.length; i++) {
-			for (int j = 0; j < numCepstra; j++) {
-				featureVector[i][j] = mfccFeature[i][j];
-			}
-//			for (int j = numCepstra; j < 2 * numCepstra; j++) {
-//				featureVector[i][j] = deltaMfcc[i][j - numCepstra];
-//			}
-//			for (int j = 2 * numCepstra; j < 3 * numCepstra; j++) {
-//				featureVector[i][j] = deltaDeltaMfcc[i][j - 2 * numCepstra];
-//			}
-			featureVector[i][numCepstra] = energyVal[i];
-//			featureVector[i][numCepstra + 1] = deltaEnergy[i];
-//			featureVector[i][numCepstra + 2] = deltaDeltaEnergy[i];
-		}
-		fv.setMfccFeature(mfccFeature);
-		fv.setFeatureVector(featureVector);
-		System.gc();
 	}
 
 	/**
@@ -118,7 +78,51 @@ public class FeatureExtract {
 		for (int i = 0; i < noOfFrames; i++) {
 			// for each frame i, make mfcc from current framed signal
 			mfccFeature[i] = mfcc.doMFCC(framedSignal[i]);// 2D data
+
+//			LogUtil.maxInArray(mfccFeature[i],"after dct");
 		}
+//		LogUtil.writeToFileAsWhole(mfccFeature,"afterdccccc");
+	}
+
+	/**
+	 * generates feature vector by combining mfcc, and its delta and delta
+	 * deltas also contains energy and its deltas
+	 */
+	public void makeMfccFeatureVector() {
+		calculateMFCC();
+//		doCepstralMeanNormalization();
+		// delta
+//		delta.setRegressionWindow(2);// 2 for delta
+//		deltaMfcc = delta.performDelta2D(mfccFeature);
+//		// delta delta
+//		delta.setRegressionWindow(1);// 1 for delta delta
+//		deltaDeltaMfcc = delta.performDelta2D(deltaMfcc);
+//		// energy
+//		energyVal = en.calcEnergy(framedSignal);
+//
+//		delta.setRegressionWindow(1);
+//		// energy delta
+//		deltaEnergy = delta.performDelta1D(energyVal);
+//		delta.setRegressionWindow(1);
+//		// energy delta delta
+//		deltaDeltaEnergy = delta.performDelta1D(deltaEnergy);
+		for (int i = 0; i < framedSignal.length; i++) {
+			for (int j = 0; j < numCepstra; j++) {
+				featureVector[i][j] = mfccFeature[i][j];
+			}
+//			for (int j = numCepstra; j < 2 * numCepstra; j++) {
+//				featureVector[i][j] = deltaMfcc[i][j - numCepstra];
+//			}
+//			for (int j = 2 * numCepstra; j < 3 * numCepstra; j++) {
+//				featureVector[i][j] = deltaDeltaMfcc[i][j - 2 * numCepstra];
+//			}
+//			featureVector[i][numCepstra] = energyVal[i];
+//			featureVector[i][numCepstra + 1] = deltaEnergy[i];
+//			featureVector[i][numCepstra + 2] = deltaDeltaEnergy[i];
+		}
+		fv.setMfccFeature(mfccFeature);
+		fv.setFeatureVector(featureVector);
+		System.gc();
 	}
 
 	/**

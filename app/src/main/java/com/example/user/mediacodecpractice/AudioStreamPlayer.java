@@ -129,6 +129,23 @@ public class AudioStreamPlayer {
 
     ;
 
+    public static float[] floatMe(short[] pcms) {
+        float[] floaters = new float[pcms.length];
+        for (int i = 0; i < pcms.length; i++) {
+            floaters[i] = pcms[i];
+        }
+        return floaters;
+    }
+
+    public static short[] shortMe(byte[] bytes) {
+        short[] out = new short[bytes.length / 2]; // will drop last byte if odd number
+        ByteBuffer bb = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
+        for (int i = 0; i < out.length; i++) {
+            out[i] = bb.getShort();
+        }
+        return out;
+    }
+
     public float[] bytesToFloats(byte[] audioBytes) {
         float[] audioData;
         //16,little endian 기준
@@ -175,6 +192,14 @@ public class AudioStreamPlayer {
         return audioData;
     }
 
+    private boolean checkEmptyBytes(byte[] bytes){
+        for(byte by:bytes){
+            if(by!=0){
+                return true;
+            }
+        }
+        return false;
+    }
     private void decodeData() throws IOException {
         ByteBuffer[] codecInputBuffers;
         ByteBuffer[] codecOutputBuffers;
@@ -298,20 +323,20 @@ public class AudioStreamPlayer {
                 buf.clear();
 
                 if (chunk.length > 0) {
-                    if (chunk[0] != 0 && chunk[1] != 0) {
-
-                        float[] pcmFloat = bytesToFloats(chunk);
+//                    if (chunk[0]!=0 && chunk[1]!=0) {
+                        if (checkEmptyBytes(chunk)) {
+                        float[] pcmFloat = floatMe(shortMe(chunk));
                         MFCCFeatureMain main = new MFCCFeatureMain();
 
                         Log.d("preprocess start", String.valueOf(++count));
 
-                        LogUtil.writeToFile(pcmFloat,"log"+count);
+//                        LogUtil.writeToFile(pcmFloat,"log"+count);
                         FeatureVector fv = main.extractFeatureFromFile(pcmFloat);
 
                         if (fv != null) {
                             for (double[] d : fv.getFeatureVector()) {
 
-                                LogUtil.log(d, "fvvvvvv");
+//                                LogUtil.log(d, "fvvvvvv");
 
                             }
 //                        for(double[] dd:fv.getFeatureVector()){
@@ -336,6 +361,8 @@ public class AudioStreamPlayer {
 //                        mAudioPlayerHandler.onAudioPlayerPlayerStart(AudioStreamPlayer.this);
 //                    }
 //                    this.mState = State.Playing;
+                    }else{
+                        Log.d("chunk","asdflakwsef");
                     }
 
                 }
@@ -353,7 +380,7 @@ public class AudioStreamPlayer {
             }
         }
 
-        new KmeansCluster(2, 13, feature, 2, silence).iterRun();
+        new KmeansCluster(3, 13, feature, 5, silence).iterRun();
 
         Log.d(TAG, "stopping...");
 
